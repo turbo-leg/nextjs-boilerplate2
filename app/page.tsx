@@ -1,103 +1,119 @@
-import Image from "next/image";
+import fs from 'fs';
+import path from 'path';
+import { parse } from 'csv-parse/sync';
+import PlayerCard from './components/PlayerCard';
+import Link from 'next/link';
+import Image from 'next/image';
+
+interface PlayerStat {
+  id: string;
+  name: string;
+  games_played: string;
+  ppg: string;
+  rpg: string;
+  apg: string;
+  spg: string;
+  bpg: string;
+  fg_pct: string;
+  ft_pct: string;
+  fg3_pct: string;
+  career_pts: string;
+  championships: string;
+  role: string;
+}
+
+// Update getPlayerImage to use avif format consistently 
+function getPlayerImage(id: string) {
+  // Check if this is a known id where we have images
+  const availableIds = ["1", "2", "5", "9", "21"]; // IDs with images
+  
+  // Use .avif format for all images
+  return `/players/${id}.avif`;
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // Read and parse the CSV file at build time
+  const csvFilePath = path.join(process.cwd(), 'stat.csv');
+  const csvData = fs.readFileSync(csvFilePath, 'utf8');
+  
+  // Skip header comment line if present
+  const dataToProcess = csvData.startsWith('//') 
+    ? csvData.split('\n').slice(1).join('\n') 
+    : csvData;
+  
+  const players = parse(dataToProcess, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true
+  }) as PlayerStat[];
+  
+  // Sort players by career points (descending)
+  const sortedPlayers = [...players].sort((a, b) => 
+    parseInt(b.career_pts) - parseInt(a.career_pts)
+  );
+  
+  // Take top 20 players for display
+  const topPlayers = sortedPlayers.slice(0, 20);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 py-10">
+      <div className="container mx-auto px-4">
+        <header className="mb-14 text-center relative">
+          {/* Modern decorative elements */}
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-full h-40 bg-blue-500/10 dark:bg-blue-500/5 blur-3xl rounded-full z-0"></div>
+          
+          <div className="relative z-10">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+              NBA Player Stats
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+              Explore and compare career statistics for the top NBA players of all time, from scoring legends to defensive masters.
+            </p>
+            <Link 
+              href="/compare" 
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-6 rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5 4a1 1 0 00-1 1v4.5h12V5a1 1 0 00-1-1H5zm7 9a1 1 0 01-1-1v-1H9a1 1 0 010-2h2V9a1 1 0 112 0v1h2a1 1 0 110 2h-2v1a1 1 0 01-1 1z" clipRule="evenodd" />
+              </svg>
+              Compare Players
+            </Link>
+          </div>
+        </header>
+        
+        <div className="mb-10 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Top Performers</h2>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Showing top 20 by career points</div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
+          {topPlayers.map((player) => (
+            <PlayerCard 
+              key={player.id} 
+              player={player} 
+              imagePath={getPlayerImage(player.id)}
+            />
+          ))}
+        </div>
+        
+        <footer className="mt-24 text-center">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="flex gap-4 items-center text-gray-600 dark:text-gray-400">
+              <a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</a>
+              <span>•</span>
+              <a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Stats API</a>
+              <span>•</span>
+              <a href="#" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</a>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              Data based on career statistics through 2023
+            </p>
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-800 w-24"></div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
