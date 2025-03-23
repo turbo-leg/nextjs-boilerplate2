@@ -183,104 +183,107 @@ export default function ComparePage() {
     ],
   };
 
-  // Enhanced chart options for better visualization
-  const chartOptions = {
-    scales: {
-      r: {
-        min: 0,
-        max: 100,                            // Set consistent max for all metrics
-        ticks: {
-          display: true,                     // Show tick marks
-          backdropColor: 'rgba(0, 0, 0, 0)', // Transparent backdrop
-          font: {
-            size: 10,
-          },
-          stepSize: 20,                      // Show fewer tick lines
-          color: 'rgba(100, 100, 100, 0.8)',
+  // Simplified chart options with proper TypeScript types
+const chartOptions = {
+  scales: {
+    r: {
+      min: 0,
+      max: 100,
+      ticks: {
+        display: true,
+        backdropColor: 'rgba(0, 0, 0, 0)',
+        font: {
+          size: 10
         },
-        grid: {
-          color: 'rgba(120, 120, 120, 0.2)', // Lighter grid lines
-          circular: true,
+        stepSize: 20,
+        color: 'rgba(100, 100, 100, 0.8)',
+      },
+      grid: {
+        color: 'rgba(120, 120, 120, 0.2)',
+        circular: true,
+      },
+      angleLines: {
+        color: 'rgba(120, 120, 120, 0.3)',
+        lineWidth: 1,
+      },
+      pointLabels: {
+        font: {
+          size: 12,
+          // Ensure this is a valid literal for Chart.js
+          weight: 'bold' as 'bold',
         },
-        angleLines: {
-          color: 'rgba(120, 120, 120, 0.3)', // Lighter angle lines
-          lineWidth: 1,
-        },
-        pointLabels: {
-          font: {
-            size: 12,
-            weight: 'bold',                  // Make labels bold
-          },
-          color: 'rgba(50, 50, 50, 0.8)',    // Darker label color
-          padding: 15,                       // More padding for labels
-        },
+        color: 'rgba(50, 50, 50, 0.8)',
+        padding: 15,
       },
     },
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          font: {
-            size: 14,
-            weight: 'bold',
-          },
-          padding: 20,
-          usePointStyle: true,               // Use points instead of boxes for legend
-          pointStyleWidth: 10,
-        },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
+  },
+  plugins: {
+    legend: {
+      position: 'top' as const,
+      labels: {
+        font: {
           size: 14,
-          weight: 'bold',
+          // Ensure this is a valid literal for Chart.js
+          weight: 'bold' as 'bold',
         },
-        bodyFont: {
-          size: 13,
-        },
-        padding: 12,
-        cornerRadius: 6,
-        callbacks: {
-          // Custom tooltip to show actual values rather than normalized ones
-          label: function(context: any) {
-            const datasetIndex = context.datasetIndex;
-            const index = context.dataIndex;
-            const player = datasetIndex === 0 ? player1 : player2;
-            
-            // Display original values based on the stat category
-            switch(index) {
-              case 0: return `${player.name}: ${player.ppg} PPG`;
-              case 1: return `${player.name}: ${player.rpg} RPG`;
-              case 2: return `${player.name}: ${player.apg} APG`;
-              case 3: return `${player.name}: ${player.spg} SPG`;
-              case 4: return `${player.name}: ${player.bpg} BPG`;
-              case 5: return `${player.name}: ${(parseFloat(player.fg_pct) * 100).toFixed(1)}% FG`;
-              case 6: return `${player.name}: ${(parseFloat(player.fg3_pct) * 100).toFixed(1)}% 3P`;
-              case 7: return `${player.name}: ${(parseFloat(player.ft_pct) * 100).toFixed(1)}% FT`;
-              case 8: return `${player.name}: ${player.games_played} Games`;
-              case 9: return `${player.name}: ${player.championships} Championships`;
-              default: return '';
-            }
+        padding: 20,
+        usePointStyle: true,
+        pointStyleWidth: 10,
+      },
+    },
+    tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      titleFont: {
+        size: 14,
+        // Ensure this is a valid literal for Chart.js
+        weight: 'bold' as 'bold',
+      },
+      bodyFont: {
+        size: 13,
+      },
+      padding: 12,
+      cornerRadius: 6,
+      callbacks: {
+        // Custom tooltip to show actual values rather than normalized ones
+        label: function(context: any) {
+          const datasetIndex = context.datasetIndex;
+          const index = context.dataIndex;
+          const player = datasetIndex === 0 ? player1 : player2;
+          
+          // Display original values based on the stat category
+          switch(index) {
+            case 0: return `${player.name}: ${player.ppg} PPG`;
+            case 1: return `${player.name}: ${player.rpg} RPG`;
+            case 2: return `${player.name}: ${player.apg} APG`;
+            case 3: return `${player.name}: ${player.spg} SPG`;
+            case 4: return `${player.name}: ${player.bpg} BPG`;
+            case 5: return `${player.name}: ${(parseFloat(player.fg_pct) * 100).toFixed(1)}% FG`;
+            case 6: return `${player.name}: ${(parseFloat(player.fg3_pct) * 100).toFixed(1)}% 3P`;
+            case 7: return `${player.name}: ${(parseFloat(player.ft_pct) * 100).toFixed(1)}% FT`;
+            case 8: return `${player.name}: ${player.games_played} Games`;
+            case 9: return `${player.name}: ${player.championships} Championships`;
+            default: return '';
           }
         }
       }
-    },
-    elements: {
-      line: {
-        tension: 0.3,          // Add some curve to the lines
-        borderJoinStyle: 'round' as CanvasLineJoin,
-      }
-    },
-    maintainAspectRatio: false,
-    animation: {
-      duration: 1500,          // Slower animation for better visual impact
-      easing: 'easeOutQuart' as const,
-    },
-    interaction: {
-      intersect: false,         // Show tooltip on nearest point
-      mode: 'index' as const,
-    },
-  };
+    }
+  },
+  elements: {
+    line: {
+      tension: 0.3,
+      borderJoinStyle: 'round' as CanvasLineJoin,
+    }
+  },
+  maintainAspectRatio: false,
+  animation: {
+    duration: 1500,
+    easing: 'easeOutQuart' as const,
+  },
+  interaction: {
+    intersect: false,
+    mode: 'index' as const,
+  },
+};
 
   // Calculate max values for comparison bars
   const maxValues = {
