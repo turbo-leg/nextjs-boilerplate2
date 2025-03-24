@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { Radar } from 'react-chartjs-2';
 import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend } from 'chart.js';
 import Link from 'next/link';
+import AnimationStyles from '../components/AnimationStyles';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Register required Chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -81,6 +83,8 @@ export default function ComparePage() {
   const [selectedPlayer1, setSelectedPlayer1] = useState<string>('5'); // Default to Curry
   const [selectedPlayer2, setSelectedPlayer2] = useState<string>('21'); // Default to Jokic
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Fetch CSV data
   useEffect(() => {
@@ -89,6 +93,14 @@ export default function ComparePage() {
         const response = await fetch('/api/players');
         const data = await response.json();
         setPlayers(data);
+        
+        // Check URL params for player IDs
+        const p1 = searchParams.get('p1');
+        const p2 = searchParams.get('p2');
+        
+        if (p1) setSelectedPlayer1(p1);
+        if (p2) setSelectedPlayer2(p2);
+        
         setIsLoading(false);
       } catch (error) {
         console.error('Error fetching player data:', error);
@@ -97,12 +109,15 @@ export default function ComparePage() {
     }
 
     fetchData();
-  }, []);
+  }, [searchParams]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading player data...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <div className="text-xl flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          Loading player data...
+        </div>
       </div>
     );
   }
@@ -299,36 +314,63 @@ const chartOptions = {
     career_pts: 40000,
   };
 
+  const handlePlayer1Change = (id: string) => {
+    setSelectedPlayer1(id);
+    updateUrlParams(id, selectedPlayer2);
+  };
+  
+  const handlePlayer2Change = (id: string) => {
+    setSelectedPlayer2(id);
+    updateUrlParams(selectedPlayer1, id);
+  };
+  
+  const updateUrlParams = (p1: string, p2: string) => {
+    // Create new URL with updated params
+    const params = new URLSearchParams();
+    params.set('p1', p1);
+    params.set('p2', p2);
+    
+    // Update URL without refreshing the page
+    router.push(`/compare?${params.toString()}`, { scroll: false });
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 py-12">
-      <div className="container mx-auto px-4">
-        <header className="mb-10 text-center relative">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-blue-500/10 dark:bg-blue-500/5 blur-3xl rounded-full z-0"></div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pb-20">
+      <div className="absolute top-0 left-0 w-full h-[40vh] bg-blue-500/5 dark:bg-blue-500/10 -z-10"></div>
+      <div className="absolute top-[20vh] right-0 w-1/3 h-[30vh] rounded-full bg-red-500/5 dark:bg-red-500/10 blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 left-0 w-1/2 h-[40vh] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl -z-10"></div>
+      
+      <AnimationStyles />
+      
+      <div className="container mx-auto px-4 relative pt-8">
+        <header className="py-12 md:py-16 text-center relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-64 bg-gradient-to-r from-blue-500/10 to-red-500/10 dark:from-blue-500/20 dark:to-red-500/20 blur-3xl rounded-full -z-10"></div>
+          
           <div className="relative z-10">
-            <Link href="/" className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline mb-4 font-medium">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <Link href="/" className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline mb-6 font-medium group">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to Player Stats
+              <span>Back to Player Stats</span>
             </Link>
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 dark:from-blue-400 dark:via-purple-400 dark:to-red-400 leading-tight">
               Player Comparison
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
               Compare stats head-to-head between any two NBA players to see who dominates in different categories
             </p>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md mx-auto max-w-3xl backdrop-blur-sm bg-opacity-90 dark:bg-opacity-90">
-            <div className="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-8">
+          <div className="bg-white/80 dark:bg-gray-800/80 p-8 rounded-2xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20 mx-auto max-w-3xl transform transition-all hover:shadow-xl">
+            <div className="flex flex-col md:flex-row justify-center space-y-6 md:space-y-0 md:space-x-8">
               <div className="w-full md:w-1/2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Player 1
                 </label>
                 <select 
                   value={selectedPlayer1}
-                  onChange={(e) => setSelectedPlayer1(e.target.value)}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:focus:ring-blue-800 focus:ring-opacity-50"
+                  onChange={(e) => handlePlayer1Change(e.target.value)}
+                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:focus:ring-blue-800 focus:ring-opacity-50 transition-all"
                 >
                   {players.map((player) => (
                     <option key={`p1-${player.id}`} value={player.id}>
@@ -344,8 +386,8 @@ const chartOptions = {
                 </label>
                 <select 
                   value={selectedPlayer2}
-                  onChange={(e) => setSelectedPlayer2(e.target.value)}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 dark:focus:ring-red-800 focus:ring-opacity-50"
+                  onChange={(e) => handlePlayer2Change(e.target.value)}
+                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 dark:focus:ring-red-800 focus:ring-opacity-50 transition-all"
                 >
                   {players.map((player) => (
                     <option key={`p2-${player.id}`} value={player.id}>
@@ -358,12 +400,12 @@ const chartOptions = {
           </div>
         </header>
         
-        <div className="flex flex-col lg:flex-row gap-8 mb-10">
+        <div className="flex flex-col lg:flex-row gap-8 mb-12 animated-section">
           {/* Player cards */}
-          <div className="w-full lg:w-1/2 flex flex-col md:flex-row gap-4">
+          <div className="w-full lg:w-1/2 flex flex-col md:flex-row gap-6">
             {/* Player 1 */}
-            <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden border border-blue-100 dark:border-blue-900/30">
-              <div className="h-52 relative bg-blue-50 dark:bg-blue-900/20">
+            <div className="flex-1 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg overflow-hidden border border-blue-100 dark:border-blue-900/30 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="h-60 relative bg-gradient-to-r from-blue-400/10 to-blue-600/10 dark:from-blue-400/20 dark:to-blue-600/20">
                 <Image
                   src={getPlayerImage(player1.id)}
                   alt={player1.name}
@@ -375,17 +417,18 @@ const chartOptions = {
                   }}
                   priority
                   unoptimized={true}
+                  className="transition-transform duration-700 hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
               </div>
               <div className="p-5 relative -mt-16">
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg">
+                <div className="bg-white/90 dark:bg-gray-800/90 p-5 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
                   <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">{player1.name}</h2>
-                  <div className="flex justify-between mt-2 mb-3">
+                  <div className="flex justify-between mt-3 mb-4">
                     <div className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
                       {player1.role}
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center px-3 py-1 bg-yellow-50 dark:bg-yellow-900/30 rounded-full">
                       <Image 
                         src="/trophy.svg"  
                         alt="Championships"
@@ -393,10 +436,10 @@ const chartOptions = {
                         height={16}
                         className="text-yellow-500 mr-1"
                       />
-                      <span className="text-sm font-bold">{player1.championships}</span>
+                      <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">{player1.championships}</span>
                     </div>
                   </div>
-                  <div className="text-center mt-4 px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 rounded-xl">
+                  <div className="text-center mt-5 px-4 py-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 rounded-xl">
                     <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                       {parseInt(player1.career_pts).toLocaleString()}
                     </div>
@@ -407,8 +450,8 @@ const chartOptions = {
             </div>
             
             {/* Player 2 */}
-            <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden border border-red-100 dark:border-red-900/30">
-              <div className="h-52 relative bg-red-50 dark:bg-red-900/20">
+            <div className="flex-1 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg overflow-hidden border border-red-100 dark:border-red-900/30 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="h-60 relative bg-gradient-to-r from-red-400/10 to-red-600/10 dark:from-red-400/20 dark:to-red-600/20">
                 <Image
                   src={getPlayerImage(player2.id)}
                   alt={player2.name}
@@ -420,17 +463,18 @@ const chartOptions = {
                   }}
                   priority
                   unoptimized={true}
+                  className="transition-transform duration-700 hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
               </div>
               <div className="p-5 relative -mt-16">
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg">
+                <div className="bg-white/90 dark:bg-gray-800/90 p-5 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
                   <h2 className="text-xl font-bold text-red-600 dark:text-red-400">{player2.name}</h2>
-                  <div className="flex justify-between mt-2 mb-3">
+                  <div className="flex justify-between mt-3 mb-4">
                     <div className="px-3 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600 dark:bg-red-900/40 dark:text-red-300">
                       {player2.role}
                     </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center px-3 py-1 bg-yellow-50 dark:bg-yellow-900/30 rounded-full">
                       <Image 
                         src="/trophy.svg"  
                         alt="Championships"
@@ -438,10 +482,10 @@ const chartOptions = {
                         height={16}
                         className="text-yellow-500 mr-1"
                       />
-                      <span className="text-sm font-bold">{player2.championships}</span>
+                      <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">{player2.championships}</span>
                     </div>
                   </div>
-                  <div className="text-center mt-4 px-4 py-3 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30 rounded-xl">
+                  <div className="text-center mt-5 px-4 py-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30 rounded-xl">
                     <div className="text-3xl font-bold text-red-700 dark:text-red-300">
                       {parseInt(player2.career_pts).toLocaleString()}
                     </div>
@@ -453,11 +497,11 @@ const chartOptions = {
           </div>
           
           {/* Radar chart */}
-          <div className="w-full lg:w-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-100 dark:border-gray-800">
-            <h3 className="text-center text-lg font-bold mb-3 text-gray-800 dark:text-white">Player Skills Comparison</h3>
+          <div className="w-full lg:w-1/2 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl">
+            <h3 className="text-center text-xl font-bold mb-5 text-gray-800 dark:text-white">Player Skills Comparison</h3>
             <div className="w-full h-[500px] relative">
               <Radar data={radarData} options={chartOptions} />
-              <div className="mt-3 text-xs text-center text-gray-500">
+              <div className="mt-4 text-xs text-center text-gray-500 dark:text-gray-400">
                 * All values normalized to facilitate comparison across different statistical categories
               </div>
             </div>
@@ -465,22 +509,43 @@ const chartOptions = {
         </div>
         
         {/* Stat comparison bars */}
-        <div className="mt-10 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-8 border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mt-12 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl animated-section">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Head-to-Head Stats</h2>
             <div className="flex gap-6">
-              <div className="flex items-center">
+              <div className="flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full">
                 <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">{player1.name}</span>
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">{player1.name}</span>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center px-4 py-2 bg-red-50 dark:bg-red-900/30 rounded-full">
                 <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">{player2.name}</span>
+                <span className="text-sm font-medium text-red-700 dark:text-red-300">{player2.name}</span>
               </div>
+              <button
+                onClick={() => {
+                  // Create shareable link
+                  const url = `${window.location.origin}/compare?p1=${selectedPlayer1}&p2=${selectedPlayer2}`;
+                  
+                  // Copy to clipboard
+                  navigator.clipboard.writeText(url)
+                    .then(() => {
+                      alert('Link copied to clipboard!');
+                    })
+                    .catch(err => {
+                      console.error('Failed to copy: ', err);
+                    });
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 rounded-full hover:bg-green-200 dark:hover:bg-green-800/40 transition-all shadow-sm ml-4"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                <span>Share Comparison</span>
+              </button>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <StatComparisonBar 
               label="Points Per Game" 
               value1={parseFloat(player1.ppg)} 
@@ -553,8 +618,12 @@ const chartOptions = {
           </div>
         </div>
         
-        <footer className="mt-16 text-center text-sm text-gray-500 dark:text-gray-500">
-          <p>Data based on career statistics through 2023</p>
+        <footer className="mt-20 text-center">
+          <div className="inline-flex items-center justify-center p-1 rounded-full bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm mb-6">
+            <div className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400">
+              Data based on career statistics through 2023
+            </div>
+          </div>
         </footer>
       </div>
     </div>
