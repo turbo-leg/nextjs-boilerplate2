@@ -24,6 +24,7 @@ interface PlayerStat {
   role: string;
 }
 
+// Update the function signature to match Next.js 15's requirements for dynamic routes
 export default function PlayerDetail({ params }: { params: { id: string } }) {
   const [player, setPlayer] = useState<PlayerStat | null>(null);
   const [isLoading, setIsLoading] = useState(true);
