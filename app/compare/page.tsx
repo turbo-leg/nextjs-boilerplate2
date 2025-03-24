@@ -336,42 +336,42 @@ const chartOptions = {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pb-12 sm:pb-20">
       <div className="absolute top-0 left-0 w-full h-[40vh] bg-blue-500/5 dark:bg-blue-500/10 -z-10"></div>
       <div className="absolute top-[20vh] right-0 w-1/3 h-[30vh] rounded-full bg-red-500/5 dark:bg-red-500/10 blur-3xl -z-10"></div>
       <div className="absolute bottom-0 left-0 w-1/2 h-[40vh] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl -z-10"></div>
       
       <AnimationStyles />
       
-      <div className="container mx-auto px-4 relative pt-8">
-        <header className="py-12 md:py-16 text-center relative">
+      <div className="container mx-auto px-4 sm:px-6 relative pt-6 sm:pt-8">
+        <header className="py-8 sm:py-12 md:py-16 text-center relative">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-64 bg-gradient-to-r from-blue-500/10 to-red-500/10 dark:from-blue-500/20 dark:to-red-500/20 blur-3xl rounded-full -z-10"></div>
           
           <div className="relative z-10">
-            <Link href="/" className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline mb-6 font-medium group">
+            <Link href="/" className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline mb-4 sm:mb-6 font-medium group">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span>Back to Player Stats</span>
             </Link>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 dark:from-blue-400 dark:via-purple-400 dark:to-red-400 leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-red-600 dark:from-blue-400 dark:via-purple-400 dark:to-red-400 leading-tight">
               Player Comparison
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
-              Compare stats head-to-head between any two NBA players to see who dominates in different categories
+            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-6 sm:mb-10 max-w-2xl mx-auto">
+              Compare stats head-to-head between any two NBA players
             </p>
           </div>
           
-          <div className="bg-white/80 dark:bg-gray-800/80 p-8 rounded-2xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20 mx-auto max-w-3xl transform transition-all hover:shadow-xl">
-            <div className="flex flex-col md:flex-row justify-center space-y-6 md:space-y-0 md:space-x-8">
-              <div className="w-full md:w-1/2">
+          <div className="bg-white/80 dark:bg-gray-800/80 p-4 sm:p-8 rounded-2xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20 mx-auto max-w-3xl transform transition-all hover:shadow-xl">
+            <div className="flex flex-col justify-center space-y-6">
+              <div className="w-full">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Player 1
                 </label>
                 <select 
                   value={selectedPlayer1}
                   onChange={(e) => handlePlayer1Change(e.target.value)}
-                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:focus:ring-blue-800 focus:ring-opacity-50 transition-all"
+                  className="w-full p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 dark:focus:ring-blue-800 focus:ring-opacity-50 transition-all"
                 >
                   {players.map((player) => (
                     <option key={`p1-${player.id}`} value={player.id}>
@@ -381,14 +381,14 @@ const chartOptions = {
                 </select>
               </div>
               
-              <div className="w-full md:w-1/2">
+              <div className="w-full">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Player 2
                 </label>
                 <select 
                   value={selectedPlayer2}
                   onChange={(e) => handlePlayer2Change(e.target.value)}
-                  className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 dark:focus:ring-red-800 focus:ring-opacity-50 transition-all"
+                  className="w-full p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm focus:border-red-500 focus:ring focus:ring-red-200 dark:focus:ring-red-800 focus:ring-opacity-50 transition-all"
                 >
                   {players.map((player) => (
                     <option key={`p2-${player.id}`} value={player.id}>
@@ -498,29 +498,46 @@ const chartOptions = {
           </div>
           
           {/* Radar chart */}
-          <div className="w-full lg:w-1/2 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl">
-            <h3 className="text-center text-xl font-bold mb-5 text-gray-800 dark:text-white">Player Skills Comparison</h3>
-            <div className="w-full h-[500px] relative">
-              <Radar data={radarData} options={chartOptions} />
+          <div className="w-full bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-4 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl mt-6 sm:mt-8">
+            <h3 className="text-center text-lg sm:text-xl font-bold mb-3 sm:mb-5 text-gray-800 dark:text-white">Player Skills Comparison</h3>
+            <div className="w-full h-[350px] sm:h-[500px] relative">
+              <Radar data={radarData} options={{
+                ...chartOptions,
+                maintainAspectRatio: false,
+                plugins: {
+                  ...chartOptions.plugins,
+                  legend: {
+                    ...chartOptions.plugins.legend,
+                    labels: {
+                      ...chartOptions.plugins.legend.labels,
+                      // Make font size responsive
+                      font: {
+                        ...chartOptions.plugins.legend.labels.font,
+                        size: window.innerWidth < 640 ? 12 : 14,
+                      }
+                    }
+                  }
+                }
+              }} />
               <div className="mt-4 text-xs text-center text-gray-500 dark:text-gray-400">
-                * All values normalized to facilitate comparison across different statistical categories
+                * All values normalized to facilitate comparison
               </div>
             </div>
           </div>
         </div>
         
         {/* Stat comparison bars */}
-        <div className="mt-12 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl animated-section">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Head-to-Head Stats</h2>
-            <div className="flex gap-6">
-              <div className="flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">{player1.name}</span>
+        <div className="mt-6 sm:mt-12 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-4 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl animated-section">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 sm:mb-8 gap-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Head-to-Head Stats</h2>
+            <div className="flex flex-wrap gap-3 sm:gap-6">
+              <div className="flex items-center px-3 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500 mr-1 sm:mr-2"></div>
+                <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">{player1.name}</span>
               </div>
-              <div className="flex items-center px-4 py-2 bg-red-50 dark:bg-red-900/30 rounded-full">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                <span className="text-sm font-medium text-red-700 dark:text-red-300">{player2.name}</span>
+              <div className="flex items-center px-3 py-2 bg-red-50 dark:bg-red-900/30 rounded-full">
+                <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 mr-1 sm:mr-2"></div>
+                <span className="text-xs sm:text-sm font-medium text-red-700 dark:text-red-300">{player2.name}</span>
               </div>
               <button
                 onClick={() => {
@@ -536,17 +553,17 @@ const chartOptions = {
                       console.error('Failed to copy: ', err);
                     });
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 rounded-full hover:bg-green-200 dark:hover:bg-green-800/40 transition-all shadow-sm ml-4"
+                className="flex items-center gap-1 sm:gap-2 px-3 py-2 text-xs sm:text-sm bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300 rounded-full hover:bg-green-200 dark:hover:bg-green-800/40 transition-all shadow-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
-                <span>Share Comparison</span>
+                <span>Share</span>
               </button>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-4 sm:gap-y-8">
             <StatComparisonBar 
               label="Points Per Game" 
               value1={parseFloat(player1.ppg)} 
@@ -619,9 +636,9 @@ const chartOptions = {
           </div>
         </div>
         
-        <footer className="mt-20 text-center">
+        <footer className="mt-12 sm:mt-20 text-center">
           <div className="inline-flex items-center justify-center p-1 rounded-full bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm mb-6">
-            <div className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400">
+            <div className="px-3 sm:px-6 py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Data based on career statistics through 2025
             </div>
           </div>

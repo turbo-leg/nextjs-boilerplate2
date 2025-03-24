@@ -86,20 +86,20 @@ export default function PlayerDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pb-12 sm:pb-20">
       <div className="absolute top-0 left-0 w-full h-[40vh] bg-blue-500/5 dark:bg-blue-500/10 -z-10"></div>
       <div className="absolute top-[20vh] right-0 w-1/3 h-[30vh] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl -z-10"></div>
       <div className="absolute bottom-0 left-0 w-1/2 h-[40vh] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-3xl -z-10"></div>
       
       <AnimationStyles />
       
-      <div className="container mx-auto px-4 relative pt-8">
+      <div className="container mx-auto px-4 sm:px-6 relative pt-4 sm:pt-8">
         {/* Theme toggle button */}
-        <div className="fixed bottom-6 right-6 z-50 shadow-lg rounded-full hover:shadow-xl transition-all duration-300 hover:scale-105">
+        <div className="fixed bottom-4 right-4 z-50 shadow-lg rounded-full hover:shadow-xl transition-all duration-300 hover:scale-105">
           <ThemeToggle />
         </div>
         
-        <header className="flex justify-between items-center py-8">
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-8 gap-4">
           <Link href="/" className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-medium group">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -109,18 +109,18 @@ export default function PlayerDetail() {
           
           <Link 
             href={`/compare?p1=${player.id}&p2=21`}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors shadow-sm w-fit"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            Compare This Player
+            <span>Compare</span>
           </Link>
         </header>
         
-        <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg overflow-hidden backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/50 mb-10">
+        <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg overflow-hidden backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/50 mb-6 sm:mb-10">
           <div className="flex flex-col md:flex-row">
-            <div className="md:w-1/3 h-80 md:h-auto relative">
+            <div className="w-full md:w-1/3 h-80 md:h-auto relative">
               <Image
                 src={getPlayerImage(player.id)}
                 alt={player.name}
@@ -136,12 +136,12 @@ export default function PlayerDetail() {
               />
             </div>
             
-            <div className="p-8 md:w-2/3">
+            <div className="p-4 sm:p-8 md:w-2/3">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">{player.name}</h1>
-                  <div className="flex items-center gap-4">
-                    <div className="px-3 py-1 text-sm font-semibold rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
+                  <h1 className="text-2xl sm:text-4xl font-bold mb-2">{player.name}</h1>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                    <div className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
                       {player.role}
                     </div>
                     
@@ -160,27 +160,27 @@ export default function PlayerDetail() {
                   </div>
                 </div>
                 
-                <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl">
-                  <div className="text-3xl font-bold text-gray-800 dark:text-white">{parseInt(player.career_pts).toLocaleString()}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">Career Points</div>
+                <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl mt-2 md:mt-0">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">{parseInt(player.career_pts).toLocaleString()}</div>
+                  <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Career Points</div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <StatBlock label="PPG" value={player.ppg} />
                 <StatBlock label="RPG" value={player.rpg} />
                 <StatBlock label="APG" value={player.apg} />
                 <StatBlock label="Games" value={player.games_played} />
               </div>
               
-              <h2 className="text-xl font-bold mb-4">Defensive Stats</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Defensive Stats</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <StatBlock label="SPG" value={player.spg} />
                 <StatBlock label="BPG" value={player.bpg} />
               </div>
               
-              <h2 className="text-xl font-bold mb-4">Shooting Efficiency</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Shooting Efficiency</h2>
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 <StatBlock label="FG%" value={`${(parseFloat(player.fg_pct) * 100).toFixed(1)}%`} />
                 <StatBlock label="3P%" value={`${(parseFloat(player.fg3_pct) * 100).toFixed(1)}%`} />
                 <StatBlock label="FT%" value={`${(parseFloat(player.ft_pct) * 100).toFixed(1)}%`} />
@@ -232,9 +232,9 @@ export default function PlayerDetail() {
 
 function StatBlock({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
-      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</div>
-      <div className="text-2xl font-bold">{value}</div>
+    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 sm:p-4 rounded-xl">
+      <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</div>
+      <div className="text-lg sm:text-2xl font-bold">{value}</div>
     </div>
   );
 }

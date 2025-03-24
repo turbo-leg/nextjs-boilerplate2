@@ -23,9 +23,9 @@ interface PlayerStat {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col items-center bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl backdrop-blur-sm">
+    <div className="flex flex-col items-center bg-gray-50 dark:bg-gray-800/50 p-2 sm:p-3 rounded-xl backdrop-blur-sm">
       <span className="text-xs text-gray-500 dark:text-gray-400">{label}</span>
-      <span className="text-lg font-bold">{value}</span>
+      <span className="text-base sm:text-lg font-bold overflow-hidden text-ellipsis">{value}</span>
     </div>
   );
 }
@@ -44,7 +44,7 @@ export default function PlayerCard({ player, imagePath }: { player: PlayerStat; 
   return (
     <Link href={`/player/${player.id}`} className="block w-full h-full">
       <div className="flex flex-col items-center bg-white/90 dark:bg-gray-900/90 rounded-2xl shadow-md overflow-hidden w-full max-w-sm border border-gray-100/50 dark:border-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 h-full">
-        <div className="w-full h-80 relative bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 overflow-hidden">
+        <div className="w-full h-64 sm:h-80 relative bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 overflow-hidden">
           {isLoading && !imgError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -95,10 +95,10 @@ export default function PlayerCard({ player, imagePath }: { player: PlayerStat; 
             </>
           )}
         </div>
-        <div className="p-6 w-full h-full flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold truncate bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300">{player.name}</h2>
-            <div className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50/80 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 backdrop-blur-sm">
+        <div className="p-4 sm:p-6 w-full h-full flex flex-col">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+            <h2 className="text-lg sm:text-xl font-bold truncate bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300">{player.name}</h2>
+            <div className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50/80 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 backdrop-blur-sm w-fit">
               {player.role}
             </div>
           </div>
@@ -115,7 +115,7 @@ export default function PlayerCard({ player, imagePath }: { player: PlayerStat; 
             </span>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
             <StatCard label="PPG" value={player.ppg} />
             <StatCard label="RPG" value={player.rpg} />
             <StatCard label="APG" value={player.apg} />
@@ -127,15 +127,15 @@ export default function PlayerCard({ player, imagePath }: { player: PlayerStat; 
           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
             <h3 className="text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Shooting Efficiency</h3>
             <div className="flex justify-between space-x-2">
-              <StatCard label="FG%" value={`${parseFloat(player.fg_pct) * 100}%`} />
-              <StatCard label="3P%" value={`${parseFloat(player.fg3_pct) * 100}%`} />
-              <StatCard label="FT%" value={`${parseFloat(player.ft_pct) * 100}%`} />
+              <StatCard label="FG%" value={`${(parseFloat(player.fg_pct) * 100).toFixed(1)}%`} />
+              <StatCard label="3P%" value={`${(parseFloat(player.fg3_pct) * 100).toFixed(1)}%`} />
+              <StatCard label="FT%" value={`${(parseFloat(player.ft_pct) * 100).toFixed(1)}%`} />
             </div>
           </div>
           
-          <div className="mt-5 text-center px-4 py-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl backdrop-blur-sm mt-auto">
-            <span className="text-2xl font-bold text-gray-800 dark:text-white">{parseInt(player.career_pts).toLocaleString()}</span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">Career Points</span>
+          <div className="mt-5 text-center px-3 sm:px-4 py-3 sm:py-4 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl backdrop-blur-sm mt-auto">
+            <span className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{parseInt(player.career_pts).toLocaleString()}</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 ml-2">Career Points</span>
           </div>
         </div>
       </div>
