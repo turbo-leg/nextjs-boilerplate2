@@ -622,7 +622,7 @@ const chartOptions = {
         <footer className="mt-20 text-center">
           <div className="inline-flex items-center justify-center p-1 rounded-full bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm mb-6">
             <div className="px-6 py-2 text-sm text-gray-500 dark:text-gray-400">
-              Data based on career statistics through 2023
+              Data based on career statistics through 2025
             </div>
           </div>
         </footer>

@@ -128,7 +128,7 @@ export default function Home() {
               </div>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-500">
-              Data based on career statistics through 2023
+              Data based on career statistics through 2025
             </p>
           </div>
         </footer>
