@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react'; // Add Suspense import
 import { parse } from 'csv-parse/sync';
 import Image from 'next/image';
 import { Radar } from 'react-chartjs-2';
@@ -78,7 +78,8 @@ function StatComparisonBar({ label, value1, value2, maxValue }: {
   );
 }
 
-export default function ComparePage() {
+// Create a component to handle the search params logic
+function ComparePageContent() {
   const [players, setPlayers] = useState<PlayerStat[]>([]);
   const [selectedPlayer1, setSelectedPlayer1] = useState<string>('5'); // Default to Curry
   const [selectedPlayer2, setSelectedPlayer2] = useState<string>('21'); // Default to Jokic
@@ -627,5 +628,21 @@ const chartOptions = {
         </footer>
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function ComparePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <div className="text-xl flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          Loading comparison...
+        </div>
+      </div>
+    }>
+      <ComparePageContent />
+    </Suspense>
   );
 }
