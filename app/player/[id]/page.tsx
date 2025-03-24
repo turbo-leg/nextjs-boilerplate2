@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation'; // Import useParams
 import ThemeToggle from '../../components/ThemeToggle';
 import AnimationStyles from '../../components/AnimationStyles';
 
@@ -24,12 +24,13 @@ interface PlayerStat {
   role: string;
 }
 
-// Update the function signature to match Next.js 15's requirements for dynamic routes
-export default function PlayerDetail({ params }: { params: { id: string } }) {
+// Change to use useParams hook instead of accepting params directly
+export default function PlayerDetail() {
   const [player, setPlayer] = useState<PlayerStat | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const playerId = params.id;
+  const params = useParams();
+  const playerId = params.id as string;
 
   useEffect(() => {
     async function fetchData() {
