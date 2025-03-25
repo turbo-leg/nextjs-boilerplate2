@@ -5,8 +5,8 @@ import { parse } from 'csv-parse/sync';
 
 export async function GET() {
   try {
-    // Read the CSV file
-    const csvFilePath = path.join(process.cwd(), 'stat.csv');
+    // Read the CSV file - Update to use career_averages.csv
+    const csvFilePath = path.join(process.cwd(), 'career_averages.csv');
     const csvData = fs.readFileSync(csvFilePath, 'utf8');
     
     // Skip header comment line if present

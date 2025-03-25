@@ -8,9 +8,25 @@ import { Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler,
 import Link from 'next/link';
 import AnimationStyles from '../components/AnimationStyles';
 import { useRouter, useSearchParams } from 'next/navigation';
+import StatsToggle from '../components/StatsToggle';
 
 // Register required Chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
+
+interface YearlyStat {
+  season: string;
+  team: string;
+  games_played: string;
+  ppg: string;
+  pts: string;
+  rpg: string;
+  apg: string;
+  spg: string;
+  bpg: string;
+  fg_pct: string;
+  ft_pct: string;
+  fg3_pct: string;
+}
 
 interface PlayerStat {
   id: string;
@@ -80,14 +96,24 @@ function StatComparisonBar({ label, value1, value2, maxValue }: {
 
 // Create a component to handle the search params logic
 function ComparePageContent() {
+  // 1. Keep all useState declarations together at the top
   const [players, setPlayers] = useState<PlayerStat[]>([]);
   const [selectedPlayer1, setSelectedPlayer1] = useState<string>('5'); // Default to Curry
   const [selectedPlayer2, setSelectedPlayer2] = useState<string>('21'); // Default to Jokic
   const [isLoading, setIsLoading] = useState(true);
+  const [showYearlyStats, setShowYearlyStats] = useState(false);
+  const [yearlyStats1, setYearlyStats1] = useState<YearlyStat[]>([]);
+  const [yearlyStats2, setYearlyStats2] = useState<YearlyStat[]>([]);
+  const [selectedSeason1, setSelectedSeason1] = useState<string>('');
+  const [selectedSeason2, setSelectedSeason2] = useState<string>('');
+  const [loadingYearlyStats, setLoadingYearlyStats] = useState(false);
+  
+  // 2. Keep all other hook calls (useRouter, useSearchParams, etc.)
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Fetch CSV data
+  // 3. Define all useEffect hooks together, before any conditional logic
+  // First useEffect - fetch players data
   useEffect(() => {
     async function fetchData() {
       try {
@@ -111,7 +137,49 @@ function ComparePageContent() {
 
     fetchData();
   }, [searchParams]);
+  
+  // Second useEffect - fetch yearly stats when needed
+  useEffect(() => {
+    async function fetchYearlyData() {
+      if (showYearlyStats && !isLoading) {
+        const playerData1 = players.find(p => p.id === selectedPlayer1);
+        const playerData2 = players.find(p => p.id === selectedPlayer2);
+        
+        if (playerData1 && playerData2) {
+          fetchYearlyStats(playerData1.id, setYearlyStats1, setSelectedSeason1);
+          fetchYearlyStats(playerData2.id, setYearlyStats2, setSelectedSeason2);
+        }
+      }
+    }
+    
+    fetchYearlyData();
+  }, [showYearlyStats, selectedPlayer1, selectedPlayer2, players, isLoading]);
 
+  // 4. Then define helper functions
+  const fetchYearlyStats = async (playerId: string, setStatsFunc: React.Dispatch<React.SetStateAction<YearlyStat[]>>, setSeasonFunc: React.Dispatch<React.SetStateAction<string>>) => {
+    try {
+      setLoadingYearlyStats(true);
+      const response = await fetch(`/api/player-yearly-stats/${playerId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch yearly stats for player ${playerId}`);
+      }
+      
+      const data = await response.json();
+      setStatsFunc(data);
+      
+      // Set first season as default selection if available
+      if (data.length > 0) {
+        setSeasonFunc(data[0].season);
+      }
+    } catch (error) {
+      console.error('Error fetching yearly stats:', error);
+    } finally {
+      setLoadingYearlyStats(false);
+    }
+  };
+
+  // 5. Continue with conditional rendering and the rest of the component logic
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
@@ -123,83 +191,189 @@ function ComparePageContent() {
     );
   }
 
-  const player1 = players.find(p => p.id === selectedPlayer1);
-  const player2 = players.find(p => p.id === selectedPlayer2);
+  // Find the selected players
+  const player1Data = players.find(p => p.id === selectedPlayer1);
+  const player2Data = players.find(p => p.id === selectedPlayer2);
 
-  if (!player1 || !player2) {
+  if (!player1Data || !player2Data) {
     return <div>Select players to compare</div>;
   }
 
-  // Define chart data with normalized values to create a fuller radar chart
-  const radarData = {
-    labels: [
-      'Scoring (PPG)', 
-      'Rebounding (RPG)', 
-      'Assists (APG)', 
-      'Steals (SPG)', 
-      'Blocks (BPG)', 
-      'Field Goal %', 
-      '3-Point %', 
-      'Free Throw %',
-      'Games Played',
-      'Championship Impact'
-    ],
-    datasets: [
-      {
-        label: player1.name,
-        data: [
-          // Normalize values to create a better radar shape
-          (parseFloat(player1.ppg) / 30) * 100,         // Scale to percentage of 30ppg
-          (parseFloat(player1.rpg) / 12) * 100,         // Scale to percentage of 12rpg
-          (parseFloat(player1.apg) / 10) * 100,         // Scale to percentage of 10apg
-          (parseFloat(player1.spg) / 2.5) * 100,        // Scale to percentage of 2.5spg
-          (parseFloat(player1.bpg) / 2.5) * 100,        // Scale to percentage of 2.5bpg
-          parseFloat(player1.fg_pct) * 100,             // Already a percentage
-          parseFloat(player1.fg3_pct) * 100,            // Already a percentage
-          parseFloat(player1.ft_pct) * 100,             // Already a percentage
-          (parseFloat(player1.games_played) / 1500) * 100, // Scale games played
-          parseInt(player1.championships) * 25,         // 25% per championship
-        ],
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',     // Increased opacity for better fill
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
-        pointRadius: 4,                                 // Larger points
-        pointHoverRadius: 7,
-        fill: true,                                     // Ensure fill is enabled
-      },
-      {
-        label: player2.name,
-        data: [
-          (parseFloat(player2.ppg) / 30) * 100,
-          (parseFloat(player2.rpg) / 12) * 100,
-          (parseFloat(player2.apg) / 10) * 100,
-          (parseFloat(player2.spg) / 2.5) * 100,
-          (parseFloat(player2.bpg) / 2.5) * 100,
-          parseFloat(player2.fg_pct) * 100,
-          parseFloat(player2.fg3_pct) * 100,
-          parseFloat(player2.ft_pct) * 100,
-          (parseFloat(player2.games_played) / 1500) * 100,
-          parseInt(player2.championships) * 25,
-        ],
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',     // Increased opacity
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
-        pointRadius: 4,
-        pointHoverRadius: 7,
-        fill: true,
-      },
-    ],
+  const getStatsForPlayer = (player: PlayerStat, yearlyStats: YearlyStat[], selectedSeason: string): any => {
+    if (!showYearlyStats || yearlyStats.length === 0) {
+      return {
+        ppg: parseFloat(player.ppg),
+        rpg: parseFloat(player.rpg),
+        apg: parseFloat(player.apg),
+        spg: parseFloat(player.spg),
+        bpg: parseFloat(player.bpg),
+        fg_pct: parseFloat(player.fg_pct),
+        fg3_pct: parseFloat(player.fg3_pct),
+        ft_pct: parseFloat(player.ft_pct),
+        games_played: parseFloat(player.games_played),
+        championships: parseInt(player.championships)
+      };
+    }
+    
+    // Find stats for the selected season
+    const seasonStats = yearlyStats.find(s => s.season === selectedSeason);
+    
+    if (!seasonStats) {
+      return {
+        ppg: parseFloat(player.ppg),
+        rpg: parseFloat(player.rpg),
+        apg: parseFloat(player.apg),
+        spg: parseFloat(player.spg),
+        bpg: parseFloat(player.bpg),
+        fg_pct: parseFloat(player.fg_pct),
+        fg3_pct: parseFloat(player.fg3_pct),
+        ft_pct: parseFloat(player.ft_pct),
+        games_played: parseFloat(player.games_played),
+        championships: parseInt(player.championships)
+      };
+    }
+    
+    return {
+      ppg: parseFloat(seasonStats.ppg || player.ppg),
+      rpg: parseFloat(seasonStats.rpg || player.rpg),
+      apg: parseFloat(seasonStats.apg || player.apg),
+      spg: parseFloat(seasonStats.spg || player.spg),
+      bpg: parseFloat(seasonStats.bpg || player.bpg),
+      fg_pct: parseFloat(seasonStats.fg_pct || player.fg_pct),
+      fg3_pct: parseFloat(seasonStats.fg3_pct || player.fg3_pct),
+      ft_pct: parseFloat(seasonStats.ft_pct || player.ft_pct),
+      games_played: parseFloat(seasonStats.games_played || player.games_played),
+      championships: parseInt(player.championships) // Championships are career-based
+    };
   };
 
-  // Simplified chart options with proper TypeScript types
+  const player1Stats = getStatsForPlayer(player1Data, yearlyStats1, selectedSeason1);
+  const player2Stats = getStatsForPlayer(player2Data, yearlyStats2, selectedSeason2);
+
+  // Define chart data with different criteria depending on comparison type
+// 1. First, add a helper function to cap values at 100
+const normalizeValue = (value: number, maxValue: number): number => {
+  // Calculate normalized value and cap at 100
+  return Math.min(100, (value / maxValue) * 100);
+};
+
+// 2. Now update the radar data calculation with better normalization factors
+const radarData = {
+  labels: showYearlyStats 
+    ? [
+        'Scoring (PPG)', 
+        'Rebounding (RPG)', 
+        'Assists (APG)', 
+        'Steals (SPG)', 
+        'Blocks (BPG)', 
+        'Field Goal %', 
+        '3-Point %', 
+        'Free Throw %',
+        'Games That Season',
+        'Points That Season'
+      ]
+    : [
+        'Scoring (PPG)', 
+        'Rebounding (RPG)', 
+        'Assists (APG)', 
+        'Steals (SPG)', 
+        'Blocks (BPG)', 
+        'Field Goal %', 
+        '3-Point %', 
+        'Free Throw %',
+        'Games Played',
+        'Championship Impact'
+      ],
+  datasets: [
+    {
+      label: showYearlyStats 
+        ? `${player1Data.name} (${selectedSeason1})` 
+        : player1Data.name,
+      data: showYearlyStats
+        // Season comparison data points with adjusted normalization
+        ? [
+            normalizeValue(player1Stats.ppg, 35), // Increased from 30 to 35 for max PPG
+            normalizeValue(player1Stats.rpg, 15), // Increased from 12 to 15 for max RPG
+            normalizeValue(player1Stats.apg, 12), // Increased from 10 to 12 for max APG
+            normalizeValue(player1Stats.spg, 3),  // Increased from 2.5 to 3 for max SPG
+            normalizeValue(player1Stats.bpg, 3),  // Increased from 2.5 to 3 for max BPG
+            normalizeValue(player1Stats.fg_pct * 100, 100), // Keep percentage as is
+            normalizeValue(player1Stats.fg3_pct * 100, 100), // Keep percentage as is
+            normalizeValue(player1Stats.ft_pct * 100, 100), // Keep percentage as is
+            // Use different normalization for games in a season
+            normalizeValue(parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.games_played || "0"), 82),
+            // Include total points for the season
+            normalizeValue(parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.pts || "0"), 2500), // Increased from 2000 to 2500
+          ]
+        // Career comparison data points with adjusted normalization
+        : [
+            normalizeValue(player1Stats.ppg, 35), // Increased from 30 to 35
+            normalizeValue(player1Stats.rpg, 15), // Increased from 12 to 15
+            normalizeValue(player1Stats.apg, 12), // Increased from 10 to 12
+            normalizeValue(player1Stats.spg, 3),  // Increased from 2.5 to 3
+            normalizeValue(player1Stats.bpg, 3),  // Increased from 2.5 to 3
+            normalizeValue(player1Stats.fg_pct * 100, 100),
+            normalizeValue(player1Stats.fg3_pct * 100, 100),
+            normalizeValue(player1Stats.ft_pct * 100, 100),
+            normalizeValue(player1Stats.games_played, 1600), // Increased from 1500 to 1600
+            normalizeValue(player1Stats.championships * 25, 100), // Ensure championship impact maxes at 100
+          ],
+      backgroundColor: 'rgba(54, 162, 235, 0.5)',     // Increased opacity for better fill
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 2,
+      pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+      pointBorderColor: '#fff',
+      pointHoverBackgroundColor: '#fff',
+      pointHoverBorderColor: 'rgba(54, 162, 235, 1)',
+      pointRadius: 4,                                 // Larger points
+      pointHoverRadius: 7,
+      fill: true,                                     // Ensure fill is enabled
+    },
+    {
+      label: showYearlyStats 
+        ? `${player2Data.name} (${selectedSeason2})` 
+        : player2Data.name,
+      data: showYearlyStats
+        // Apply the same normalizeValue function to player2's data
+        ? [
+            normalizeValue(player2Stats.ppg, 35),
+            normalizeValue(player2Stats.rpg, 15),
+            normalizeValue(player2Stats.apg, 12),
+            normalizeValue(player2Stats.spg, 3),
+            normalizeValue(player2Stats.bpg, 3),
+            normalizeValue(player2Stats.fg_pct * 100, 100),
+            normalizeValue(player2Stats.fg3_pct * 100, 100),
+            normalizeValue(player2Stats.ft_pct * 100, 100),
+            normalizeValue(parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.games_played || "0"), 82),
+            normalizeValue(parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.pts || "0"), 2500),
+          ]
+        : [
+            normalizeValue(player2Stats.ppg, 35),
+            normalizeValue(player2Stats.rpg, 15),
+            normalizeValue(player2Stats.apg, 12),
+            normalizeValue(player2Stats.spg, 3),
+            normalizeValue(player2Stats.bpg, 3),
+            normalizeValue(player2Stats.fg_pct * 100, 100),
+            normalizeValue(player2Stats.fg3_pct * 100, 100),
+            normalizeValue(player2Stats.ft_pct * 100, 100),
+            normalizeValue(player2Stats.games_played, 1600),
+            normalizeValue(player2Stats.championships * 25, 100),
+          ],
+      backgroundColor: 'rgba(255, 99, 132, 0.5)',     // Increased opacity
+      borderColor: 'rgba(255, 99, 132, 1)',
+      borderWidth: 2,
+      pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+      pointBorderColor: '#fff',
+      pointHoverBackgroundColor: '#fff',
+      pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
+      pointRadius: 4,
+      pointHoverRadius: 7,
+      fill: true,
+    },
+  ],
+};
+
+// Simplified chart options with proper TypeScript types
 const chartOptions = {
   scales: {
     r: {
@@ -212,7 +386,7 @@ const chartOptions = {
           size: 10
         },
         stepSize: 20,
-        color: 'rgba(100, 100, 100, 0.8)',
+        color: '#fff',
       },
       grid: {
         color: 'rgba(120, 120, 120, 0.2)',
@@ -228,7 +402,7 @@ const chartOptions = {
           // Ensure this is a valid literal for Chart.js
           weight: 'bold' as 'bold',
         },
-        color: 'rgba(50, 50, 50, 0.8)',
+        color: '#fff',
         padding: 15,
       },
     },
@@ -251,7 +425,6 @@ const chartOptions = {
       backgroundColor: 'rgba(0, 0, 0, 0.8)',
       titleFont: {
         size: 14,
-        // Ensure this is a valid literal for Chart.js
         weight: 'bold' as 'bold',
       },
       bodyFont: {
@@ -260,25 +433,55 @@ const chartOptions = {
       padding: 12,
       cornerRadius: 6,
       callbacks: {
-        // Custom tooltip to show actual values rather than normalized ones
+        // Custom tooltip to show correct values based on mode
         label: function(context: any) {
           const datasetIndex = context.datasetIndex;
           const index = context.dataIndex;
-          const player = datasetIndex === 0 ? player1 : player2;
+          const playerName = datasetIndex === 0 ? player1Data.name : player2Data.name;
+          const playerStats = datasetIndex === 0 ? player1Stats : player2Stats;
+          const season = datasetIndex === 0 ? selectedSeason1 : selectedSeason2;
+          const yearlyStats = datasetIndex === 0 ? yearlyStats1 : yearlyStats2;
+          
+          // Use stats from the correct source based on mode
+          const labelPrefix = showYearlyStats 
+            ? `${playerName} (${season}): ` 
+            : `${playerName}: `;
           
           // Display original values based on the stat category
-          switch(index) {
-            case 0: return `${player.name}: ${player.ppg} PPG`;
-            case 1: return `${player.name}: ${player.rpg} RPG`;
-            case 2: return `${player.name}: ${player.apg} APG`;
-            case 3: return `${player.name}: ${player.spg} SPG`;
-            case 4: return `${player.name}: ${player.bpg} BPG`;
-            case 5: return `${player.name}: ${(parseFloat(player.fg_pct) * 100).toFixed(1)}% FG`;
-            case 6: return `${player.name}: ${(parseFloat(player.fg3_pct) * 100).toFixed(1)}% 3P`;
-            case 7: return `${player.name}: ${(parseFloat(player.ft_pct) * 100).toFixed(1)}% FT`;
-            case 8: return `${player.name}: ${player.games_played} Games`;
-            case 9: return `${player.name}: ${player.championships} Championships`;
-            default: return '';
+          if (showYearlyStats) {
+            // Season comparison tooltips
+            switch(index) {
+              case 0: return `${labelPrefix}${playerStats.ppg.toFixed(1)} PPG`;
+              case 1: return `${labelPrefix}${playerStats.rpg.toFixed(1)} RPG`;
+              case 2: return `${labelPrefix}${playerStats.apg.toFixed(1)} APG`;
+              case 3: return `${labelPrefix}${playerStats.spg.toFixed(1)} SPG`;
+              case 4: return `${labelPrefix}${playerStats.bpg.toFixed(1)} BPG`;
+              case 5: return `${labelPrefix}${(playerStats.fg_pct * 100).toFixed(1)}% FG`;
+              case 6: return `${labelPrefix}${(playerStats.fg3_pct * 100).toFixed(1)}% 3P`;
+              case 7: return `${labelPrefix}${(playerStats.ft_pct * 100).toFixed(1)}% FT`;
+              case 8: 
+                const gamesPlayed = yearlyStats.find(s => s.season === season)?.games_played || "0";
+                return `${labelPrefix}${gamesPlayed} Games`;
+              case 9: 
+                const seasonPoints = yearlyStats.find(s => s.season === season)?.pts || "0";
+                return `${labelPrefix}${parseFloat(seasonPoints).toFixed(0)} Total Points`;
+              default: return '';
+            }
+          } else {
+            // Career comparison tooltips
+            switch(index) {
+              case 0: return `${labelPrefix}${playerStats.ppg.toFixed(1)} PPG`;
+              case 1: return `${labelPrefix}${playerStats.rpg.toFixed(1)} RPG`;
+              case 2: return `${labelPrefix}${playerStats.apg.toFixed(1)} APG`;
+              case 3: return `${labelPrefix}${playerStats.spg.toFixed(1)} SPG`;
+              case 4: return `${labelPrefix}${playerStats.bpg.toFixed(1)} BPG`;
+              case 5: return `${labelPrefix}${(playerStats.fg_pct * 100).toFixed(1)}% FG`;
+              case 6: return `${labelPrefix}${(playerStats.fg3_pct * 100).toFixed(1)}% 3P`;
+              case 7: return `${labelPrefix}${(playerStats.ft_pct * 100).toFixed(1)}% FT`;
+              case 8: return `${labelPrefix}${playerStats.games_played.toFixed(0)} Career Games`;
+              case 9: return `${labelPrefix}${playerStats.championships} Championships`;
+              default: return '';
+            }
           }
         }
       }
@@ -401,6 +604,52 @@ const chartOptions = {
           </div>
         </header>
         
+        <div className="flex justify-end mb-6">
+          <StatsToggle onChange={setShowYearlyStats} />
+        </div>
+
+        {showYearlyStats && (
+          <div className="bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 mb-6 shadow-md">
+            <div className="flex flex-col md:flex-row justify-between gap-4">
+              <div className="w-full md:w-1/2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {player1Data?.name} Season
+                </label>
+                <select
+                  value={selectedSeason1}
+                  onChange={(e) => setSelectedSeason1(e.target.value)}
+                  className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+                  disabled={loadingYearlyStats || yearlyStats1.length === 0}
+                >
+                  {yearlyStats1.map((stat) => (
+                    <option key={stat.season} value={stat.season}>
+                      {stat.season} - {stat.team}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="w-full md:w-1/2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {player2Data?.name} Season
+                </label>
+                <select
+                  value={selectedSeason2}
+                  onChange={(e) => setSelectedSeason2(e.target.value)}
+                  className="w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+                  disabled={loadingYearlyStats || yearlyStats2.length === 0}
+                >
+                  {yearlyStats2.map((stat) => (
+                    <option key={stat.season} value={stat.season}>
+                      {stat.season} - {stat.team}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col lg:flex-row gap-8 mb-12 animated-section">
           {/* Player cards */}
           <div className="w-full lg:w-1/2 flex flex-col md:flex-row gap-6">
@@ -408,8 +657,8 @@ const chartOptions = {
             <div className="flex-1 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg overflow-hidden border border-blue-100 dark:border-blue-900/30 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
               <div className="h-60 relative bg-gradient-to-r from-blue-400/10 to-blue-600/10 dark:from-blue-400/20 dark:to-blue-600/20">
                 <Image
-                  src={getPlayerImage(player1.id)}
-                  alt={player1.name}
+                  src={getPlayerImage(player1Data.id)}
+                  alt={player1Data.name}
                   fill
                   style={{ objectFit: 'cover' }}
                   sizes="(max-width: 768px) 100vw, 300px"
@@ -424,10 +673,10 @@ const chartOptions = {
               </div>
               <div className="p-5 relative -mt-16">
                 <div className="bg-white/90 dark:bg-gray-800/90 p-5 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
-                  <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">{player1.name}</h2>
+                  <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400">{player1Data.name}</h2>
                   <div className="flex justify-between mt-3 mb-4">
                     <div className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
-                      {player1.role}
+                      {player1Data.role}
                     </div>
                     <div className="flex items-center px-3 py-1 bg-yellow-50 dark:bg-yellow-900/30 rounded-full">
                       <Image 
@@ -437,14 +686,30 @@ const chartOptions = {
                         height={16}
                         className="text-yellow-500 mr-1"
                       />
-                      <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">{player1.championships}</span>
+                      <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">{player1Data.championships}</span>
                     </div>
                   </div>
                   <div className="text-center mt-5 px-4 py-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 rounded-xl">
-                    <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
-                      {parseInt(player1.career_pts).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-blue-600/70 dark:text-blue-400/70">Career Points</div>
+                    {showYearlyStats && yearlyStats1.length > 0 && selectedSeason1 ? (
+                      <>
+                        <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                          {parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.ppg || player1Data.ppg).toFixed(1)}
+                        </div>
+                        <div className="text-sm text-blue-600/70 dark:text-blue-400/70">
+                          PPG in {selectedSeason1}
+                        </div>
+                        <div className="text-xs text-blue-500/70 dark:text-blue-300/70 mt-1">
+                          (Career: {player1Data.ppg} PPG)
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                          {parseInt(player1Data.career_pts).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-blue-600/70 dark:text-blue-400/70">Career Points</div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -454,8 +719,8 @@ const chartOptions = {
             <div className="flex-1 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg overflow-hidden border border-red-100 dark:border-red-900/30 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
               <div className="h-60 relative bg-gradient-to-r from-red-400/10 to-red-600/10 dark:from-red-400/20 dark:to-red-600/20">
                 <Image
-                  src={getPlayerImage(player2.id)}
-                  alt={player2.name}
+                  src={getPlayerImage(player2Data.id)}
+                  alt={player2Data.name}
                   fill
                   style={{ objectFit: 'cover' }}
                   sizes="(max-width: 768px) 100vw, 300px"
@@ -470,10 +735,10 @@ const chartOptions = {
               </div>
               <div className="p-5 relative -mt-16">
                 <div className="bg-white/90 dark:bg-gray-800/90 p-5 rounded-xl shadow-lg backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
-                  <h2 className="text-xl font-bold text-red-600 dark:text-red-400">{player2.name}</h2>
+                  <h2 className="text-xl font-bold text-red-600 dark:text-red-400">{player2Data.name}</h2>
                   <div className="flex justify-between mt-3 mb-4">
                     <div className="px-3 py-1 text-xs font-semibold rounded-full bg-red-50 text-red-600 dark:bg-red-900/40 dark:text-red-300">
-                      {player2.role}
+                      {player2Data.role}
                     </div>
                     <div className="flex items-center px-3 py-1 bg-yellow-50 dark:bg-yellow-900/30 rounded-full">
                       <Image 
@@ -483,14 +748,30 @@ const chartOptions = {
                         height={16}
                         className="text-yellow-500 mr-1"
                       />
-                      <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">{player2.championships}</span>
+                      <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400">{player2Data.championships}</span>
                     </div>
                   </div>
                   <div className="text-center mt-5 px-4 py-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/30 rounded-xl">
-                    <div className="text-3xl font-bold text-red-700 dark:text-red-300">
-                      {parseInt(player2.career_pts).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-red-600/70 dark:text-red-400/70">Career Points</div>
+                    {showYearlyStats && yearlyStats2.length > 0 && selectedSeason2 ? (
+                      <>
+                        <div className="text-3xl font-bold text-red-700 dark:text-red-300">
+                          {parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.ppg || player2Data.ppg).toFixed(1)}
+                        </div>
+                        <div className="text-sm text-red-600/70 dark:text-red-400/70">
+                          PPG in {selectedSeason2}
+                        </div>
+                        <div className="text-xs text-red-500/70 dark:text-red-300/70 mt-1">
+                          (Career: {player2Data.ppg} PPG)
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-3xl font-bold text-red-700 dark:text-red-300">
+                          {parseInt(player2Data.career_pts).toLocaleString()}
+                        </div>
+                        <div className="text-sm text-red-600/70 dark:text-red-400/70">Career Points</div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -533,11 +814,11 @@ const chartOptions = {
             <div className="flex flex-wrap gap-3 sm:gap-6">
               <div className="flex items-center px-3 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full">
                 <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500 mr-1 sm:mr-2"></div>
-                <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">{player1.name}</span>
+                <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">{player1Data.name}</span>
               </div>
               <div className="flex items-center px-3 py-2 bg-red-50 dark:bg-red-900/30 rounded-full">
                 <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-500 mr-1 sm:mr-2"></div>
-                <span className="text-xs sm:text-sm font-medium text-red-700 dark:text-red-300">{player2.name}</span>
+                <span className="text-xs sm:text-sm font-medium text-red-700 dark:text-red-300">{player2Data.name}</span>
               </div>
               <button
                 onClick={() => {
@@ -566,80 +847,211 @@ const chartOptions = {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-4 sm:gap-y-8">
             <StatComparisonBar 
               label="Points Per Game" 
-              value1={parseFloat(player1.ppg)} 
-              value2={parseFloat(player2.ppg)}
+              value1={player1Stats.ppg} 
+              value2={player2Stats.ppg}
               maxValue={maxValues.ppg}
             />
             
             <StatComparisonBar 
               label="Rebounds Per Game" 
-              value1={parseFloat(player1.rpg)} 
-              value2={parseFloat(player2.rpg)}
+              value1={player1Stats.rpg} 
+              value2={player2Stats.rpg}
               maxValue={maxValues.rpg}
             />
             
             <StatComparisonBar 
               label="Assists Per Game" 
-              value1={parseFloat(player1.apg)} 
-              value2={parseFloat(player2.apg)}
+              value1={player1Stats.apg} 
+              value2={player2Stats.apg}
               maxValue={maxValues.apg}
             />
             
             <StatComparisonBar 
               label="Steals Per Game" 
-              value1={parseFloat(player1.spg)} 
-              value2={parseFloat(player2.spg)}
+              value1={player1Stats.spg} 
+              value2={player2Stats.spg}
               maxValue={maxValues.spg}
             />
             
             <StatComparisonBar 
               label="Blocks Per Game" 
-              value1={parseFloat(player1.bpg)} 
-              value2={parseFloat(player2.bpg)}
+              value1={player1Stats.bpg} 
+              value2={player2Stats.bpg}
               maxValue={maxValues.bpg}
             />
             
             <StatComparisonBar 
               label="Field Goal %" 
-              value1={parseFloat(player1.fg_pct) * 100} 
-              value2={parseFloat(player2.fg_pct) * 100}
+              value1={player1Stats.fg_pct * 100} 
+              value2={player2Stats.fg_pct * 100}
               maxValue={maxValues.fg_pct}
             />
             
             <StatComparisonBar 
               label="3-Point %" 
-              value1={parseFloat(player1.fg3_pct) * 100} 
-              value2={parseFloat(player2.fg3_pct) * 100}
+              value1={player1Stats.fg3_pct * 100} 
+              value2={player2Stats.fg3_pct * 100}
               maxValue={maxValues.fg3_pct}
             />
             
             <StatComparisonBar 
               label="Free Throw %" 
-              value1={parseFloat(player1.ft_pct) * 100} 
-              value2={parseFloat(player2.ft_pct) * 100}
+              value1={player1Stats.ft_pct * 100} 
+              value2={player2Stats.ft_pct * 100}
               maxValue={maxValues.ft_pct}
             />
             
             <StatComparisonBar 
               label="Games Played" 
-              value1={parseFloat(player1.games_played)} 
-              value2={parseFloat(player2.games_played)}
+              value1={player1Stats.games_played} 
+              value2={player2Stats.games_played}
               maxValue={maxValues.games_played}
             />
             
             <StatComparisonBar 
-              label="Career Points" 
-              value1={parseFloat(player1.career_pts)} 
-              value2={parseFloat(player2.career_pts)}
-              maxValue={maxValues.career_pts}
+              label={showYearlyStats ? "Season Points" : "Career Points"}
+              value1={showYearlyStats && yearlyStats1.length > 0 ? 
+                parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.pts || "0") : 
+                parseFloat(player1Data.career_pts)
+              } 
+              value2={showYearlyStats && yearlyStats2.length > 0 ? 
+                parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.pts || "0") : 
+                parseFloat(player2Data.career_pts)
+              }
+              maxValue={showYearlyStats ? 3000 : maxValues.career_pts}
             />
           </div>
         </div>
         
+        {showYearlyStats && (
+          <div className="mt-6 sm:mt-12 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-lg p-4 sm:p-8 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm transform transition-all duration-300 hover:shadow-xl animated-section">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white mb-6">Career vs Season Stats</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-blue-50/50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800/30">
+                <h3 className="text-lg font-bold text-blue-700 dark:text-blue-300 mb-3">{player1Data.name}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Career Avg</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">PPG</div>
+                        <div className="text-lg font-bold">{player1Data.ppg}</div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">RPG</div>
+                        <div className="text-lg font-bold">{player1Data.rpg}</div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">APG</div>
+                        <div className="text-lg font-bold">{player1Data.apg}</div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">FG%</div>
+                        <div className="text-lg font-bold">{(parseFloat(player1Data.fg_pct) * 100).toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{selectedSeason1}</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">PPG</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.ppg || "0") > parseFloat(player1Data.ppg) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.ppg || "0").toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">RPG</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.rpg || "0") > parseFloat(player1Data.rpg) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.rpg || "0").toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">APG</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.apg || "0") > parseFloat(player1Data.apg) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.apg || "0").toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">FG%</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.fg_pct || "0") > parseFloat(player1Data.fg_pct) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {(parseFloat(yearlyStats1.find(s => s.season === selectedSeason1)?.fg_pct || "0") * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-red-50/50 dark:bg-red-900/20 rounded-xl p-4 border border-red-100 dark:border-red-800/30">
+                <h3 className="text-lg font-bold text-red-700 dark:text-red-300 mb-3">{player2Data.name}</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Career Avg</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">PPG</div>
+                        <div className="text-lg font-bold">{player2Data.ppg}</div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">RPG</div>
+                        <div className="text-lg font-bold">{player2Data.rpg}</div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">APG</div>
+                        <div className="text-lg font-bold">{player2Data.apg}</div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">FG%</div>
+                        <div className="text-lg font-bold">{(parseFloat(player2Data.fg_pct) * 100).toFixed(1)}%</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{selectedSeason2}</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">PPG</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.ppg || "0") > parseFloat(player2Data.ppg) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.ppg || "0").toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">RPG</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.rpg || "0") > parseFloat(player2Data.rpg) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.rpg || "0").toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">APG</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.apg || "0") > parseFloat(player2Data.apg) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.apg || "0").toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="bg-white/80 dark:bg-gray-800/80 p-2 rounded text-center">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">FG%</div>
+                        <div className={`text-lg font-bold ${parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.fg_pct || "0") > parseFloat(player2Data.fg_pct) ? "text-green-600 dark:text-green-400" : ""}`}>
+                          {(parseFloat(yearlyStats2.find(s => s.season === selectedSeason2)?.fg_pct || "0") * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <footer className="mt-12 sm:mt-20 text-center">
           <div className="inline-flex items-center justify-center p-1 rounded-full bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm mb-6">
             <div className="px-3 sm:px-6 py-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              Data based on career statistics through 2025
+              {showYearlyStats ? 
+                `Comparing ${player1Data.name}'s ${selectedSeason1} to ${player2Data.name}'s ${selectedSeason2} stats` : 
+                "Comparing career statistics through 2025"
+              }
             </div>
           </div>
         </footer>

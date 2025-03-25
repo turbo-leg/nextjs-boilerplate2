@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation'; // Import useParams
 import ThemeToggle from '../../components/ThemeToggle';
 import AnimationStyles from '../../components/AnimationStyles';
+import YearlyStatsChart from '../../components/YearlyStatsChart';
+import YearlyStatsTable from '../../components/YearlyStatsTable';
+import StatsToggle from '../../components/StatsToggle'; // Add import
 
 interface PlayerStat {
   id: string;
@@ -28,6 +31,7 @@ interface PlayerStat {
 export default function PlayerDetail() {
   const [player, setPlayer] = useState<PlayerStat | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showYearlyStats, setShowYearlyStats] = useState(false); // Add state for toggle
   const router = useRouter();
   const params = useParams();
   const playerId = params.id as string;
@@ -189,27 +193,43 @@ export default function PlayerDetail() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-md p-6 backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/50">
-            <h2 className="text-xl font-bold mb-4">Scoring Efficiency</h2>
-            {/* Here you could add charts showing scoring efficiency */}
-            <p className="text-gray-600 dark:text-gray-400">
-              {player.name} scored {parseInt(player.career_pts).toLocaleString()} points over 
-              {player.games_played} games, averaging {player.ppg} points per game with 
-              a field goal percentage of {(parseFloat(player.fg_pct) * 100).toFixed(1)}%.
-            </p>
-          </div>
-          
-          <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-md p-6 backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/50">
-            <h2 className="text-xl font-bold mb-4">Team Impact</h2>
-            {/* Here you could add information about team impact */}
-            <p className="text-gray-600 dark:text-gray-400">
-              With {player.championships} {parseInt(player.championships) === 1 ? 'championship' : 'championships'} 
-              to {player.name}'s name, their impact went beyond just statistics.
-              {parseInt(player.championships) > 2 ? " They were a true dynasty player." : ""}
-            </p>
-          </div>
+        {/* Add the toggle before the stats section */}
+        <div className="flex justify-end my-4">
+          <StatsToggle onChange={setShowYearlyStats} />
         </div>
+
+        {/* Conditionally render stats based on toggle */}
+        {showYearlyStats ? (
+          <>
+            <div className="mt-8">
+              <YearlyStatsChart playerId={playerId} playerName={player.name} />
+            </div>
+            <div className="mt-6 mb-10">
+              <YearlyStatsTable playerId={playerId} />
+            </div>
+          </>
+        ) : (
+          // Original career stats content
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-md p-6 backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/50">
+              <h2 className="text-xl font-bold mb-4">Career Overview</h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                {player.games_played} games, averaging {player.ppg} points per game with 
+                a field goal percentage of {(parseFloat(player.fg_pct) * 100).toFixed(1)}%.
+              </p>
+            </div>
+            
+            <div className="bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-md p-6 backdrop-blur-sm border border-gray-100/50 dark:border-gray-700/50">
+              <h2 className="text-xl font-bold mb-4">Team Impact</h2>
+              {/* Here you could add information about team impact */}
+              <p className="text-gray-600 dark:text-gray-400">
+                With {player.championships} {parseInt(player.championships) === 1 ? 'championship' : 'championships'} 
+                to {player.name}'s name, their impact went beyond just statistics.
+                {parseInt(player.championships) > 2 ? " They were a true dynasty player." : ""}
+              </p>
+            </div>
+          </div>
+        )}
         
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-6">Compare With Other Players</h2>
