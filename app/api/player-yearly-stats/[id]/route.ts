@@ -5,10 +5,10 @@ import { parse } from 'csv-parse/sync';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const playerId = params.id;
+    const playerId = context.params.id;
     
     // Get all files in the player-stats directory
     const statsDir = path.join(process.cwd(), 'player-stats');
