@@ -3,13 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 
-export async function GET(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+// Use the absolute minimum syntax that Next.js expects
+export function GET(request: NextRequest, context: any) {
+  const { params } = context;
+  const playerId = params.id;
+  
   try {
-    const playerId = context.params.id;
-    
     // Get all files in the player-stats directory
     const statsDir = path.join(process.cwd(), 'player-stats');
     
@@ -128,3 +127,4 @@ export async function GET(
     );
   }
 }
+

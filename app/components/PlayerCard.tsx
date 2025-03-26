@@ -37,8 +37,22 @@ export default function PlayerCard({ player, imagePath }: { player: PlayerStat; 
 
   // Set the image path after component mounts to avoid hydration issues
   useEffect(() => {
-    setImgSrc(imagePath);
-    setImgError(false); // Reset error state when path changes
+    // Check if we can load the player-specific image first
+    const img = new window.Image();
+    img.src = imagePath;
+    
+    img.onload = () => {
+      setImgSrc(imagePath);
+      setIsLoading(false);
+      setImgError(false);
+    };
+    
+    img.onerror = () => {
+      // If player image fails, use the default image
+      setImgSrc('/players/default.avif');
+      setIsLoading(false);
+      setImgError(false); // Not technically an error anymore since we have a fallback
+    };
   }, [imagePath]);
 
   return (

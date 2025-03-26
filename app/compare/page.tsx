@@ -45,7 +45,9 @@ interface PlayerStat {
   role: string;
 }
 
+// Helper function to get player image with fallback
 function getPlayerImage(id: string) {
+  // First try to load the player-specific image
   return `/players/${id}.avif`;
 }
 
@@ -386,7 +388,7 @@ const chartOptions = {
           size: 10
         },
         stepSize: 20,
-        color: '#fff',
+        color: 'rgba(100, 100, 100, 0.8)',
       },
       grid: {
         color: 'rgba(120, 120, 120, 0.2)',
@@ -402,7 +404,7 @@ const chartOptions = {
           // Ensure this is a valid literal for Chart.js
           weight: 'bold' as 'bold',
         },
-        color: '#fff',
+        color: 'rgba(50, 50, 50, 0.8)',
         padding: 15,
       },
     },
@@ -663,6 +665,7 @@ const chartOptions = {
                   style={{ objectFit: 'cover' }}
                   sizes="(max-width: 768px) 100vw, 300px"
                   onError={(e) => {
+                    console.log(`Falling back to default image for player ${player1Data.id}`);
                     e.currentTarget.src = '/players/default.avif';
                   }}
                   priority
@@ -725,6 +728,7 @@ const chartOptions = {
                   style={{ objectFit: 'cover' }}
                   sizes="(max-width: 768px) 100vw, 300px"
                   onError={(e) => {
+                    console.log(`Falling back to default image for player ${player2Data.id}`);
                     e.currentTarget.src = '/players/default.avif';
                   }}
                   priority
